@@ -33,23 +33,33 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = async (email, password) => {
-    const response = await api.post('/auth/login', { email, password });
-    if (response.data.success) {
-      localStorage.setItem('token', response.data.token);
-      setUser(response.data.user);
-      return response.data;
+    try {
+      const response = await api.post('/auth/login', { email, password });
+      if (response.data.success) {
+        localStorage.setItem('token', response.data.token);
+        setUser(response.data.user);
+        return response.data;
+      }
+      throw new Error(response.data.message || 'Login failed');
+    } catch (error) {
+      const message = error.response?.data?.message || error.message || 'Login failed';
+      throw new Error(message);
     }
-    throw new Error(response.data.message || 'Login failed');
   };
 
   const register = async (userData) => {
-    const response = await api.post('/auth/register', userData);
-    if (response.data.success) {
-      localStorage.setItem('token', response.data.token);
-      setUser(response.data.user);
-      return response.data;
+    try {
+      const response = await api.post('/auth/register', userData);
+      if (response.data.success) {
+        localStorage.setItem('token', response.data.token);
+        setUser(response.data.user);
+        return response.data;
+      }
+      throw new Error(response.data.message || 'Registration failed');
+    } catch (error) {
+      const message = error.response?.data?.message || error.message || 'Registration failed';
+      throw new Error(message);
     }
-    throw new Error(response.data.message || 'Registration failed');
   };
 
   const logout = () => {
