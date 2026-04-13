@@ -2,6 +2,7 @@ import React from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 import { LogOut, Home, FileText, Bell, User } from 'lucide-react';
+import OfficerDashboard from './OfficerDashboard';
 
 const Dashboard = () => {
   const { user, logout } = useAuth();
@@ -11,6 +12,10 @@ const Dashboard = () => {
     logout();
     navigate('/login');
   };
+
+  if (user?.role === 'officer' || user?.role === 'admin') {
+    return <OfficerDashboard />;
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col font-sans">

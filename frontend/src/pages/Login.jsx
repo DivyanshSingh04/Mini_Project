@@ -10,6 +10,7 @@ const Login = () => {
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [loginType, setLoginType] = useState('citizen');
 
   const from = location.state?.from?.pathname || '/dashboard';
 
@@ -61,13 +62,42 @@ const Login = () => {
       <div className="flex w-full flex-col justify-center px-8 sm:px-12 lg:w-1/2 xl:px-24">
         <div className="mx-auto w-full max-w-md">
           <div className="mb-10 text-center lg:text-left">
-            <h2 className="text-3xl font-bold tracking-tight text-gray-900">Welcome back</h2>
+            <h2 className="text-3xl font-bold tracking-tight text-gray-900">
+              {loginType === 'officer' ? 'Official Portal' : 'Welcome back'}
+            </h2>
             <p className="mt-2 text-sm text-gray-600">
-              Don't have an account?{' '}
-              <Link to="/register" className="font-semibold text-primary-600 hover:text-primary-500 transition-colors">
-                Register for free
-              </Link>
+              {loginType === 'citizen' ? (
+                <>
+                  Don't have an account?{' '}
+                  <Link to="/register" className="font-semibold text-primary-600 hover:text-primary-500 transition-colors">
+                    Register for free
+                  </Link>
+                </>
+              ) : (
+                'Authorized personnel only. Please sign in.'
+              )}
             </p>
+          </div>
+
+          <div className="flex p-1 space-x-1 bg-gray-100 rounded-xl mb-8">
+            <button
+              type="button"
+              onClick={() => setLoginType('citizen')}
+              className={`w-full py-2.5 text-sm font-medium rounded-lg transition-all ${
+                loginType === 'citizen' ? 'bg-white text-gray-900 shadow shadow-gray-200' : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              Citizen
+            </button>
+            <button
+              type="button"
+              onClick={() => setLoginType('officer')}
+              className={`w-full py-2.5 text-sm font-medium rounded-lg transition-all ${
+                loginType === 'officer' ? 'bg-white text-red-600 shadow shadow-gray-200' : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              Official
+            </button>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -142,7 +172,11 @@ const Login = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className="group relative flex w-full justify-center rounded-xl bg-primary-600 px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-primary-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600 disabled:opacity-70 disabled:cursor-not-allowed transition-all"
+              className={`group relative flex w-full justify-center rounded-xl px-4 py-3 text-sm font-semibold text-white shadow-sm disabled:opacity-70 disabled:cursor-not-allowed transition-all ${
+                loginType === 'officer' 
+                  ? 'bg-red-600 hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600'
+                  : 'bg-primary-600 hover:bg-primary-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600'
+              }`}
             >
               {isLoading ? (
                 <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent pb-0.5"></div>

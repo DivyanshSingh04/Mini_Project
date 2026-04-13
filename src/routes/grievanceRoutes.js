@@ -19,7 +19,7 @@ router.get("/my", protect, authorize("citizen"), getMyGrievances);
 
 // Admin / Officer routes
 router.get("/all", protect, authorize("admin", "officer"), getAllGrievances);
-router.get("/stats", protect, authorize("admin"), getStats);
+router.get("/stats", protect, authorize("admin", "officer"), getStats);
 router.put("/:id/status", protect, authorize("admin", "officer"), updateGrievanceStatus);
 
 module.exports = router;
