@@ -118,15 +118,15 @@ const OfficerDashboard = () => {
               </div>
             </div>
             <div className="flex items-center gap-4">
-              <div className="flex items-center gap-3 pl-4 border-l border-gray-200">
+              <Link to="/profile" className="flex items-center gap-3 pl-4 border-l border-gray-200 hover:opacity-80 transition-opacity cursor-pointer">
                 <div className="hidden md:flex flex-col items-end">
                   <span className="text-sm font-semibold text-gray-900">{user?.name}</span>
                   <span className="text-xs text-red-600 font-medium">Duty Officer</span>
                 </div>
-                <div className="h-10 w-10 rounded-full bg-red-100 border border-red-200 flex items-center justify-center text-red-700">
+                <div className="h-10 w-10 rounded-full bg-red-100 border border-red-200 flex items-center justify-center text-red-700 hover:bg-red-200 transition-colors">
                   <User size={20} />
                 </div>
-              </div>
+              </Link>
               <button 
                 onClick={handleLogout}
                 className="ml-2 text-gray-500 hover:text-red-600 p-2 rounded-full hover:bg-gray-100 transition-colors"
