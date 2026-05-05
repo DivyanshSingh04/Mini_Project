@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { UserPlus, Mail, Lock, User, Phone, MapPin, AlertCircle, ArrowRight } from 'lucide-react';
+import { UserPlus, Mail, Lock, User, Phone, MapPin, AlertCircle, ArrowRight, CheckCircle2 } from 'lucide-react';
 
 const Register = () => {
   const navigate = useNavigate();
-  const { register } = useAuth();
+  const { register, verifyOtp, resendOtp } = useAuth();
+  const [step, setStep] = useState(1);
+  const [otp, setOtp] = useState('');
+  const [registeredEmail, setRegisteredEmail] = useState('');
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -35,12 +38,38 @@ const Register = () => {
     };
 
     try {
-      await register(dataToSubmit);
-      navigate('/dashboard', { replace: true });
+      const res = await register(dataToSubmit);
+      setRegisteredEmail(dataToSubmit.email);
+      setStep(2);
     } catch (err) {
       setError(err.message || 'Failed to register. Please try again.');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleVerifyOtp = async (e) => {
+    e.preventDefault();
+    setError(null);
+    setIsLoading(true);
+
+    try {
+      await verifyOtp(registeredEmail, otp);
+      navigate('/dashboard', { replace: true });
+    } catch (err) {
+      setError(err.message || 'Invalid or expired OTP.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleResendOtp = async () => {
+    setError(null);
+    try {
+      await resendOtp(registeredEmail);
+      alert('A new OTP has been sent to your email.');
+    } catch (err) {
+      setError(err.message || 'Failed to resend OTP.');
     }
   };
 
@@ -71,160 +100,220 @@ const Register = () => {
       <div className="flex w-full flex-col justify-center py-12 px-8 sm:px-12 lg:w-7/12 xl:px-20 overflow-y-auto">
         <div className="mx-auto w-full max-w-xl">
           <div className="mb-10 text-center lg:text-left">
-            <h2 className="text-3xl font-bold tracking-tight text-gray-900">Create an account</h2>
+            <h2 className="text-3xl font-bold tracking-tight text-gray-900">
+              {step === 1 ? 'Create an account' : 'Verify your email'}
+            </h2>
             <p className="mt-2 text-sm text-gray-600">
-              Already have an account?{' '}
-              <Link to="/login" className="font-semibold text-primary-600 hover:text-primary-500 transition-colors">
-                Sign in instead
-              </Link>
+              {step === 1 ? (
+                <>
+                  Already have an account?{' '}
+                  <Link to="/login" className="font-semibold text-primary-600 hover:text-primary-500 transition-colors">
+                    Sign in instead
+                  </Link>
+                </>
+              ) : (
+                <>
+                  We sent a 6-digit code to <span className="font-semibold">{registeredEmail}</span>
+                </>
+              )}
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {error && (
-              <div className="flex items-center gap-3 rounded-xl bg-red-50 p-4 text-sm text-red-800 border border-red-100">
-                <AlertCircle size={20} className="text-red-500 shrink-0" />
-                <p>{error}</p>
-              </div>
-            )}
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Name */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700" htmlFor="name">Full Name</label>
-                <div className="relative mt-2">
-                  <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
-                    <User size={18} className="text-gray-400" />
-                  </div>
-                  <input
-                    id="name" name="name" type="text" required value={formData.name} onChange={handleChange}
-                    className="block w-full rounded-xl border border-gray-200 bg-white py-3 pl-11 pr-4 text-gray-900 placeholder:text-gray-400 focus:border-primary-500 focus:outline-none focus:ring-4 focus:ring-primary-500/10 shadow-sm transition-all"
-                    placeholder="Ram Kumar"
-                  />
+          {step === 1 ? (
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {error && (
+                <div className="flex items-center gap-3 rounded-xl bg-red-50 p-4 text-sm text-red-800 border border-red-100">
+                  <AlertCircle size={20} className="text-red-500 shrink-0" />
+                  <p>{error}</p>
                 </div>
-              </div>
-
-              {/* Email */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700" htmlFor="email">Email Address</label>
-                <div className="relative mt-2">
-                  <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
-                    <Mail size={18} className="text-gray-400" />
-                  </div>
-                  <input
-                    id="email" name="email" type="email" required value={formData.email} onChange={handleChange}
-                    className="block w-full rounded-xl border border-gray-200 bg-white py-3 pl-11 pr-4 text-gray-900 placeholder:text-gray-400 focus:border-primary-500 focus:outline-none focus:ring-4 focus:ring-primary-500/10 shadow-sm transition-all"
-                    placeholder="ram@example.com"
-                  />
-                </div>
-              </div>
-
-              {/* Password */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700" htmlFor="password">Password</label>
-                <div className="relative mt-2">
-                  <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
-                    <Lock size={18} className="text-gray-400" />
-                  </div>
-                  <input
-                    id="password" name="password" type="password" required value={formData.password} onChange={handleChange}
-                    className="block w-full rounded-xl border border-gray-200 bg-white py-3 pl-11 pr-4 text-gray-900 placeholder:text-gray-400 focus:border-primary-500 focus:outline-none focus:ring-4 focus:ring-primary-500/10 shadow-sm transition-all"
-                    placeholder="••••••••"
-                  />
-                </div>
-              </div>
-
-              {/* Phone */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700" htmlFor="phone">Phone Number</label>
-                <div className="relative mt-2">
-                  <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
-                    <Phone size={18} className="text-gray-400" />
-                  </div>
-                  <input
-                    id="phone" name="phone" type="tel" required value={formData.phone} onChange={handleChange}
-                    className="block w-full rounded-xl border border-gray-200 bg-white py-3 pl-11 pr-4 text-gray-900 placeholder:text-gray-400 focus:border-primary-500 focus:outline-none focus:ring-4 focus:ring-primary-500/10 shadow-sm transition-all"
-                    placeholder="9876543210"
-                  />
-                </div>
-              </div>
-
-              {/* Age */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700" htmlFor="age">Age</label>
-                <div className="relative mt-2">
-                  <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
-                    <CalendarHeart size={18} className="text-gray-400" />
-                  </div>
-                  <input
-                    id="age" name="age" type="number" min="18" required value={formData.age} onChange={handleChange}
-                    className="block w-full rounded-xl border border-gray-200 bg-white py-3 pl-11 pr-4 text-gray-900 placeholder:text-gray-400 focus:border-primary-500 focus:outline-none focus:ring-4 focus:ring-primary-500/10 shadow-sm transition-all"
-                    placeholder="25"
-                  />
-                </div>
-              </div>
-
-              {/* Village */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700" htmlFor="village">Village/Town</label>
-                <div className="relative mt-2">
-                  <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
-                    <MapPin size={18} className="text-gray-400" />
-                  </div>
-                  <input
-                    id="village" name="village" type="text" required value={formData.village} onChange={handleChange}
-                    className="block w-full rounded-xl border border-gray-200 bg-white py-3 pl-11 pr-4 text-gray-900 placeholder:text-gray-400 focus:border-primary-500 focus:outline-none focus:ring-4 focus:ring-primary-500/10 shadow-sm transition-all"
-                    placeholder="Enter village name"
-                  />
-                </div>
-              </div>
-
-              {/* District */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700" htmlFor="district">District</label>
-                <div className="relative mt-2">
-                  <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
-                    <MapPin size={18} className="text-gray-400" />
-                  </div>
-                  <input
-                    id="district" name="district" type="text" required value={formData.district} onChange={handleChange}
-                    className="block w-full rounded-xl border border-gray-200 bg-white py-3 pl-11 pr-4 text-gray-900 placeholder:text-gray-400 focus:border-primary-500 focus:outline-none focus:ring-4 focus:ring-primary-500/10 shadow-sm transition-all"
-                    placeholder="Enter district"
-                  />
-                </div>
-              </div>
-
-              {/* State */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700" htmlFor="state">State</label>
-                <div className="relative mt-2">
-                  <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
-                    <MapPin size={18} className="text-gray-400" />
-                  </div>
-                  <input
-                    id="state" name="state" type="text" required value={formData.state} onChange={handleChange}
-                    className="block w-full rounded-xl border border-gray-200 bg-white py-3 pl-11 pr-4 text-gray-900 placeholder:text-gray-400 focus:border-primary-500 focus:outline-none focus:ring-4 focus:ring-primary-500/10 shadow-sm transition-all"
-                    placeholder="Enter state"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="group flex w-full justify-center rounded-xl bg-primary-600 px-4 py-3.5 text-sm font-semibold text-white shadow-sm hover:bg-primary-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600 disabled:opacity-70 disabled:cursor-not-allowed transition-all mt-4"
-            >
-              {isLoading ? (
-                <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent pb-0.5"></div>
-              ) : (
-                <span className="flex items-center gap-2">
-                  Complete Registration
-                  <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
-                </span>
               )}
-            </button>
-          </form>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Name */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700" htmlFor="name">Full Name</label>
+                  <div className="relative mt-2">
+                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+                      <User size={18} className="text-gray-400" />
+                    </div>
+                    <input
+                      id="name" name="name" type="text" required value={formData.name} onChange={handleChange}
+                      className="block w-full rounded-xl border border-gray-200 bg-white py-3 pl-11 pr-4 text-gray-900 placeholder:text-gray-400 focus:border-primary-500 focus:outline-none focus:ring-4 focus:ring-primary-500/10 shadow-sm transition-all"
+                      placeholder="Ram Kumar"
+                    />
+                  </div>
+                </div>
+
+                {/* Email */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700" htmlFor="email">Email Address</label>
+                  <div className="relative mt-2">
+                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+                      <Mail size={18} className="text-gray-400" />
+                    </div>
+                    <input
+                      id="email" name="email" type="email" required value={formData.email} onChange={handleChange}
+                      className="block w-full rounded-xl border border-gray-200 bg-white py-3 pl-11 pr-4 text-gray-900 placeholder:text-gray-400 focus:border-primary-500 focus:outline-none focus:ring-4 focus:ring-primary-500/10 shadow-sm transition-all"
+                      placeholder="ram@example.com"
+                    />
+                  </div>
+                </div>
+
+                {/* Password */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700" htmlFor="password">Password</label>
+                  <div className="relative mt-2">
+                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+                      <Lock size={18} className="text-gray-400" />
+                    </div>
+                    <input
+                      id="password" name="password" type="password" required value={formData.password} onChange={handleChange}
+                      className="block w-full rounded-xl border border-gray-200 bg-white py-3 pl-11 pr-4 text-gray-900 placeholder:text-gray-400 focus:border-primary-500 focus:outline-none focus:ring-4 focus:ring-primary-500/10 shadow-sm transition-all"
+                      placeholder="••••••••"
+                    />
+                  </div>
+                </div>
+
+                {/* Phone */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700" htmlFor="phone">Phone Number</label>
+                  <div className="relative mt-2">
+                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+                      <Phone size={18} className="text-gray-400" />
+                    </div>
+                    <input
+                      id="phone" name="phone" type="tel" required value={formData.phone} onChange={handleChange}
+                      className="block w-full rounded-xl border border-gray-200 bg-white py-3 pl-11 pr-4 text-gray-900 placeholder:text-gray-400 focus:border-primary-500 focus:outline-none focus:ring-4 focus:ring-primary-500/10 shadow-sm transition-all"
+                      placeholder="9876543210"
+                    />
+                  </div>
+                </div>
+
+                {/* Age */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700" htmlFor="age">Age</label>
+                  <div className="relative mt-2">
+                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+                      <CalendarHeart size={18} className="text-gray-400" />
+                    </div>
+                    <input
+                      id="age" name="age" type="number" min="18" required value={formData.age} onChange={handleChange}
+                      className="block w-full rounded-xl border border-gray-200 bg-white py-3 pl-11 pr-4 text-gray-900 placeholder:text-gray-400 focus:border-primary-500 focus:outline-none focus:ring-4 focus:ring-primary-500/10 shadow-sm transition-all"
+                      placeholder="25"
+                    />
+                  </div>
+                </div>
+
+                {/* Village */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700" htmlFor="village">Village/Town</label>
+                  <div className="relative mt-2">
+                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+                      <MapPin size={18} className="text-gray-400" />
+                    </div>
+                    <input
+                      id="village" name="village" type="text" required value={formData.village} onChange={handleChange}
+                      className="block w-full rounded-xl border border-gray-200 bg-white py-3 pl-11 pr-4 text-gray-900 placeholder:text-gray-400 focus:border-primary-500 focus:outline-none focus:ring-4 focus:ring-primary-500/10 shadow-sm transition-all"
+                      placeholder="Enter village name"
+                    />
+                  </div>
+                </div>
+
+                {/* District */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700" htmlFor="district">District</label>
+                  <div className="relative mt-2">
+                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+                      <MapPin size={18} className="text-gray-400" />
+                    </div>
+                    <input
+                      id="district" name="district" type="text" required value={formData.district} onChange={handleChange}
+                      className="block w-full rounded-xl border border-gray-200 bg-white py-3 pl-11 pr-4 text-gray-900 placeholder:text-gray-400 focus:border-primary-500 focus:outline-none focus:ring-4 focus:ring-primary-500/10 shadow-sm transition-all"
+                      placeholder="Enter district"
+                    />
+                  </div>
+                </div>
+
+                {/* State */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700" htmlFor="state">State</label>
+                  <div className="relative mt-2">
+                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+                      <MapPin size={18} className="text-gray-400" />
+                    </div>
+                    <input
+                      id="state" name="state" type="text" required value={formData.state} onChange={handleChange}
+                      className="block w-full rounded-xl border border-gray-200 bg-white py-3 pl-11 pr-4 text-gray-900 placeholder:text-gray-400 focus:border-primary-500 focus:outline-none focus:ring-4 focus:ring-primary-500/10 shadow-sm transition-all"
+                      placeholder="Enter state"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="group flex w-full justify-center rounded-xl bg-primary-600 px-4 py-3.5 text-sm font-semibold text-white shadow-sm hover:bg-primary-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600 disabled:opacity-70 disabled:cursor-not-allowed transition-all mt-4"
+              >
+                {isLoading ? (
+                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent pb-0.5"></div>
+                ) : (
+                  <span className="flex items-center gap-2">
+                    Complete Registration
+                    <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+                  </span>
+                )}
+              </button>
+            </form>
+          ) : (
+            <form onSubmit={handleVerifyOtp} className="space-y-6">
+              {error && (
+                <div className="flex items-center gap-3 rounded-xl bg-red-50 p-4 text-sm text-red-800 border border-red-100">
+                  <AlertCircle size={20} className="text-red-500 shrink-0" />
+                  <p>{error}</p>
+                </div>
+              )}
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700" htmlFor="otp">Enter 6-Digit OTP</label>
+                <div className="relative mt-2">
+                  <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+                    <CheckCircle2 size={18} className="text-gray-400" />
+                  </div>
+                  <input
+                    id="otp" name="otp" type="text" required maxLength="6" value={otp} onChange={(e) => setOtp(e.target.value)}
+                    className="block w-full rounded-xl border border-gray-200 bg-white py-3 pl-11 pr-4 text-center text-2xl tracking-widest text-gray-900 placeholder:text-gray-300 focus:border-primary-500 focus:outline-none focus:ring-4 focus:ring-primary-500/10 shadow-sm transition-all"
+                    placeholder="••••••"
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={isLoading || otp.length !== 6}
+                className="group flex w-full justify-center rounded-xl bg-primary-600 px-4 py-3.5 text-sm font-semibold text-white shadow-sm hover:bg-primary-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600 disabled:opacity-70 disabled:cursor-not-allowed transition-all mt-4"
+              >
+                {isLoading ? (
+                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent pb-0.5"></div>
+                ) : (
+                  <span className="flex items-center gap-2">
+                    Verify Email
+                    <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+                  </span>
+                )}
+              </button>
+              
+              <div className="text-center mt-4">
+                <button 
+                  type="button" 
+                  onClick={handleResendOtp}
+                  className="text-sm font-semibold text-primary-600 hover:text-primary-500 transition-colors"
+                >
+                  Didn't receive code? Resend
+                </button>
+              </div>
+            </form>
+          )}
         </div>
       </div>
     </div>
