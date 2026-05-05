@@ -28,6 +28,8 @@ const Login = () => {
       navigate(from, { replace: true });
     } catch (err) {
       setError(err.message || 'Failed to login');
+      // If error message indicates verification needed, we could automatically redirect, 
+      // but providing a link is often better UX so they understand what's happening.
     } finally {
       setIsLoading(false);
     }
@@ -187,6 +189,16 @@ const Login = () => {
                 </span>
               )}
             </button>
+            
+            <div className="mt-4 text-center">
+              <Link 
+                to="/verify" 
+                state={{ email: formData.email }} 
+                className="text-sm font-semibold text-primary-600 hover:text-primary-500 transition-colors"
+              >
+                Need to verify your email?
+              </Link>
+            </div>
           </form>
         </div>
       </div>

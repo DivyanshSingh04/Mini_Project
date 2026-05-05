@@ -8,12 +8,15 @@ import MyGrievances from './pages/MyGrievances';
 import Profile from './pages/Profile';
 import ProtectedRoute from './components/ProtectedRoute';
 
+import VerifyEmail from './pages/VerifyEmail';
+
 function App() {
   return (
     <Routes>
       <Route path="/" element={<Navigate to="/dashboard" replace />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/verify" element={<VerifyEmail />} />
       
       {/* Protected Routes Wrapper */}
       <Route element={<ProtectedRoute />}>
