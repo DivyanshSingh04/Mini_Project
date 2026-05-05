@@ -1,20 +1,8 @@
-const nodemailer = require("nodemailer");
+const { Resend } = require('resend');
 
 const sendEmail = async (options) => {
-  // Use user-provided SMTP credentials or create a test account on the fly if testing
-  // However, for best results, expect environment variables to be set.
-  const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST || "smtp.gmail.com",
-    port: process.env.SMTP_PORT || 587,
-    secure: process.env.SMTP_SECURE === "true", // true for 465, false for other ports
-    auth: {
-      user: process.env.SMTP_EMAIL,
-      pass: process.env.SMTP_PASSWORD,
-    },
-  });
-
   // Since we might not have credentials during dev, fallback to console log
-  if (!process.env.SMTP_EMAIL || !process.env.SMTP_PASSWORD) {
+  if (!process.env.RESEND_API_KEY) {
     console.log("=====================================================");
     console.log(`[SIMULATED EMAIL] To: ${options.email}`);
     console.log(`[SIMULATED EMAIL] Subject: ${options.subject}`);
@@ -23,15 +11,27 @@ const sendEmail = async (options) => {
     return;
   }
 
-  const message = {
-    from: `${process.env.FROM_NAME || "e-GramSAARTHI"} <${process.env.FROM_EMAIL || process.env.SMTP_EMAIL}>`,
-    to: options.email,
+  const resend = new Resend(process.env.RESEND_API_KEY);
+
+  // If you are using Resend's free tier without a verified custom domain,
+  // you MUST send emails FROM 'onboarding@resend.dev'
+  // and you can ONLY send TO the email address you registered with on Resend.
+  const fromEmail = 'onboarding@resend.dev';
+
+  const { data, error } = await resend.emails.send({
+    from: `e-GramSAARTHI <${fromEmail}>`,
+    to: [options.email],
     subject: options.subject,
     text: options.message,
     html: options.htmlMessage || options.message,
-  };
+  });
 
-  await transporter.sendMail(message);
+  if (error) {
+    console.error("Resend API Error:", error);
+    throw new Error(error.message);
+  }
+
+  return data;
 };
 
 module.exports = sendEmail;
