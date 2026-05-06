@@ -264,6 +264,15 @@ const Register = () => {
                   </span>
                 )}
               </button>
+              
+              <div className="mt-4 text-center">
+                <Link 
+                  to="/verify" 
+                  className="text-sm font-semibold text-primary-600 hover:text-primary-500 transition-colors"
+                >
+                  Already registered but need to verify email?
+                </Link>
+              </div>
             </form>
           ) : (
             <form onSubmit={handleVerifyOtp} className="space-y-6">
